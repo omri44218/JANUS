@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרויקט יאנוס - החידה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&family=Courier+Prime&display=swap');
+        
+        body {
+            font-family: 'Assistant', sans-serif;
+            scroll-behavior: smooth;
+            background-color: #0f172a;
+        }
+
+        .terminal-text {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .image-wrapper {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        /* הגדרת אזור הלחיצה על החלון - שקוף ופעיל תמיד, ללא סימן יד של לינק */
+        .clickable-window {
+            position: absolute;
+            top: 5%;    
+            left: 5%;
+            width: 25%; 
+            height: 40%;
+            cursor: default; /* מסיר את סימן היד של הלינק */
+            z-index: 10;
+            background: transparent;
+        }
+
+        .envelope-paper {
+            background-color: #e5d3b3;
+            color: #2d241e;
+            transform: rotate(-1deg);
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
+            border-radius: 2px;
+        }
+
+        input::placeholder {
+            color: rgba(99, 102, 241, 0.2);
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- Header / Navbar -->
+    <nav class="bg-gray-900/90 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-500 tracking-tighter terminal-text">PROJECT_JANUS_v1.0</h1>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-12">
+
+        <!-- Section: The Story (The Envelope) -->
+        <section id="about" class="mb-16">
+            <div class="envelope-paper p-8 rounded-sm shadow-xl relative">
+                <div class="absolute top-4 left-4 border-2 border-red-800 text-red-800 px-2 py-1 font-bold text-xs uppercase rotate-[-15deg]">סודי ביותר</div>
+                <h2 class="text-2xl font-bold mb-4 border-b border-gray-400 pb-2">תיק חקירה: ד"ר איתן ארז</h2>
+                <p class="text-lg leading-relaxed">
+                    בשנת 1994, מדען מחשבים אלמוני בשם <strong>ד"ר איתן ארז</strong> נעלם מביתו בתל אביב. המשטרה סגרה את התיק מחוסר ראיות, אבל השמועות ברשת טענו שהוא עבד על אלגוריתם שמסוגל "לשמוע את העבר" דרך גלי רדיו שנותרו לכודים באטמוספירה.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section: The Riddle (The Image) -->
+        <section id="riddle" class="text-center">
+            <div class="image-wrapper rounded-lg shadow-2xl overflow-hidden border-4 border-gray-800">
+                <img src="gg.png" alt="זירת האירוע" class="w-full h-auto block" id="riddleImage">
+                
+                <!-- אזור לחיצה על החלון - פעיל תמיד ושקוף, ללא סמן לינק -->
+                <a href="1.html" target="_blank" class="clickable-window" id="windowLink"></a>
+            </div>
+
+           
+           
+        </section>
+
+    </main>
+
+    <footer class="mt-20 py-8 text-center text-gray-800 text-xs terminal-text">
+        <p>PROJECT JANUS // 1994</p>
+    </footer>
+
+    <script>
+        function checkCode() {
+            const input = document.getElementById('decodeInput').value.trim().toLowerCase();
+            const msg = document.getElementById('msg');
+            
+            if (input === "window" || input === "חלון") {
+                msg.innerText = "ACCESS GRANTED";
+                msg.className = "mt-6 text-green-900 terminal-text";
+            } else {
+                msg.innerText = "INVALID KEY";
+                msg.className = "mt-6 text-red-950 terminal-text";
+            }
+        }
+
+        document.getElementById('decodeInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkCode();
+        });
+    </script>
+</body>
+</html>

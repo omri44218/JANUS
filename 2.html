@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הספרייה העולמית - פרויקט יאנוס</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;700&family=Courier+Prime&display=swap');
+        
+        body {
+            background-color: #0a0a0a;
+            color: #8892b0;
+            font-family: 'Assistant', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .terminal {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .library-container {
+            border: 1px solid #1a1a1a;
+            background: linear-gradient(180deg, #0f0f0f 0%, #050505 100%);
+        }
+
+        .book-shelf {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+            gap: 5px;
+            padding: 20px;
+            border-bottom: 8px solid #1a1a1a;
+        }
+
+        .book {
+            height: 100px;
+            background-color: #161b22;
+            border-left: 2px solid #30363d;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .book:hover {
+            background-color: #1f2937;
+            transform: translateY(-5px);
+        }
+
+        .book.active {
+            background-color: #4f46e5;
+            box-shadow: 0 0 15px #4f46e5;
+        }
+
+        .book-label {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-90deg);
+            font-size: 8px;
+            white-space: nowrap;
+            color: #4a5568;
+            pointer-events: none;
+        }
+
+        #libraryContent, #puzzleOverlay, #successPanel {
+            display: none;
+        }
+
+        .noise {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .locked-screen {
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input {
+            background: transparent;
+            border-bottom: 1px solid #1e293b;
+            color: #e2e8f0;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #4f46e5;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+    <div class="noise"></div>
+
+    <header class="max-w-5xl mx-auto mb-10 border-b border-gray-900 pb-4 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-bold terminal tracking-tighter text-gray-100">GLOBAL_LIB_v2.0</h1>
+            <p class="text-[10px] text-gray-600 uppercase">Directory: /ROOT/JANUS/ARCHIVE/BOOKS</p>
+        </div>
+        <div id="connectionStatus" class="text-[10px] terminal text-red-900">OFFLINE</div>
+    </header>
+
+    <main class="max-w-4xl mx-auto">
+        
+        <div id="authPanel" class="locked-screen">
+            <p class="terminal text-xs mb-6 text-gray-500 uppercase tracking-widest">Enter Previous Signal Key to Unlock Library Access</p>
+            <input type="text" id="prevCodeInput" placeholder="" class="terminal text-xl p-2 w-full max-w-md mb-4 uppercase">
+            <button onclick="checkAuth()" class="terminal text-[10px] text-gray-600 hover:text-indigo-400 border border-gray-900 px-6 py-2 transition-all">CONNECT_TO_DATABASE</button>
+            <p id="authMsg" class="mt-4 terminal text-[10px] h-4"></p>
+        </div>
+
+        <div id="libraryContent">
+            <section class="mb-10 text-right">
+                <p class="text-sm text-gray-400 leading-relaxed">
+                    התחברת לספרייה העולמית. מצא את <span class="text-white font-bold underline">"ספר הצללים"</span> כדי לחשוף את הגישה לפרק הבא.
+                </p>
+            </section>
+
+            <div class="library-container rounded-lg p-2">
+                <div class="book-shelf" id="shelf1"></div>
+                <div class="book-shelf" id="shelf2"></div>
+                <div class="book-shelf" id="shelf3"></div>
+            </div>
+
+            <div id="bookInfo" class="mt-8 p-6 border border-gray-900 bg-black/50 min-h-[100px] text-right">
+                <p class="terminal text-[10px] text-gray-700 mb-2 uppercase">Scan Metadata:</p>
+                <div id="bookData" class="text-gray-500 text-sm italic">בחר ספר מהמדף כדי לסרוק...</div>
+            </div>
+        </div>
+
+        <div id="puzzleOverlay" class="mt-12 p-8 border-2 border-indigo-900/50 bg-indigo-950/10 rounded-xl">
+            <div class="text-center">
+                <h3 class="terminal text-indigo-400 mb-2 font-bold">DECRYPTION_GATE</h3>
+               
+                
+                <div class="flex justify-center gap-2 mb-6">
+                    <input type="text" id="puzzleInput" maxlength="6" placeholder="DIGITS" 
+                           class="terminal text-3xl tracking-[1rem] w-64 border-b-2 border-indigo-500 pb-2">
+                </div>
+
+                <button onclick="verifyPuzzle()" class="terminal bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 px-10 py-3 border border-indigo-500/50 transition-all">
+                    DECRYPT_FILE
+                </button>
+                <p id="puzzleHint" class="mt-4 terminal text-[10px] text-red-500 h-4"></p>
+            </div>
+        </div>
+
+        <div id="successPanel" class="mt-12 fade-in">
+            <div class="p-8 border border-green-500 bg-green-950/20 rounded-lg text-center">
+                <h2 class="terminal text-green-500 text-2xl mb-2">ACCESS GRANTED</h2>
+                <p class="text-gray-400 text-sm mb-8 terminal">קובץ 'פרויקט יאנוס - חלק 3' פוענח בהצלחה.</p>
+                <p class="text-indigo-400 text-xs mb-8 terminal">KEY 2: RESONANCE_FREQ_432</p>
+                
+                <a href="3.html" class="inline-block terminal bg-green-600 hover:bg-green-500 text-black font-bold px-12 py-4 rounded transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                    כניסה לשרת הליבה >
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const SHELF_SIZE = 24;
+        const TARGET_SHELF = 1; 
+        const TARGET_BOOK = 14; 
+        const CORRECT_PUZZLE_CODE = "211494"; 
+
+        function checkAuth() {
+            const val = document.getElementById('prevCodeInput').value.trim().toUpperCase();
+            if (val === "ECHO_IN_THE_ARCHIVE_94") {
+                document.getElementById('connectionStatus').innerText = "ONLINE";
+                document.getElementById('connectionStatus').className = "text-[10px] terminal text-green-700";
+                document.getElementById('authPanel').style.display = "none";
+                document.getElementById('libraryContent').style.display = "block";
+                initLibrary();
+            } else {
+                document.getElementById('authMsg').innerText = "ACCESS DENIED";
+                document.getElementById('authMsg').className = "mt-4 terminal text-[10px] text-red-900";
+            }
+        }
+
+        function initLibrary() {
+            const shelves = ['shelf1', 'shelf2', 'shelf3'];
+            shelves.forEach((id, shelfIndex) => {
+                const container = document.getElementById(id);
+                for (let i = 0; i < SHELF_SIZE; i++) {
+                    const book = document.createElement('div');
+                    book.className = 'book';
+                    const label = document.createElement('span');
+                    label.className = 'book-label terminal';
+                    label.innerText = `REF-${shelfIndex}${i}`;
+                    book.appendChild(label);
+                    book.onclick = () => scanBook(shelfIndex, i, book);
+                    container.appendChild(book);
+                }
+            });
+        }
+
+        function scanBook(shelf, idx, element) {
+            const dataBox = document.getElementById('bookData');
+            document.querySelectorAll('.book').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+            
+            if (shelf === TARGET_SHELF && idx === TARGET_BOOK) {
+                dataBox.innerHTML = "<span class='text-indigo-400 font-bold animate-pulse'>מערכת הפענוח הופעלה. ראה למטה.</span>";
+                document.getElementById('puzzleOverlay').style.display = "block";
+                document.getElementById('puzzleOverlay').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                document.getElementById('puzzleOverlay').style.display = "none";
+                dataBox.innerText = "סריקה נכשלה: מידע לא רלוונטי.";
+            }
+        }
+
+        function verifyPuzzle() {
+            const val = document.getElementById('puzzleInput').value.trim();
+            if (val === CORRECT_PUZZLE_CODE) {
+                document.getElementById('libraryContent').style.opacity = "0.3";
+                document.getElementById('puzzleOverlay').style.display = "none";
+                document.getElementById('successPanel').style.display = "block";
+                document.getElementById('successPanel').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                document.getElementById('puzzleHint').innerText = "ERROR: INVALID SEQUENCE";
+                document.getElementById('puzzleInput').classList.add('shake');
+                setTimeout(() => document.getElementById('puzzleInput').classList.remove('shake'), 500);
+            }
+        }
+    </script>
+</body>
+</html>

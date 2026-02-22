@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JANUS System - Signal Precision</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        body {
+            background-color: #020408;
+            color: #4da6ff;
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+        }
+
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 20;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .waveform-container {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 10px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #0f172a;
+        }
+
+        .bar {
+            flex: 1;
+            background: #1e3a8a;
+            height: 2px;
+            transition: height 0.05s ease;
+        }
+
+        .active-scan .bar {
+            animation: jitter 0.2s infinite alternate;
+        }
+
+        @keyframes jitter {
+            from { height: 2px; opacity: 0.1; }
+            to { height: var(--h, 50%); opacity: 0.8; }
+        }
+
+        .input-coord {
+            background: #000;
+            border-bottom: 2px solid #1e40af;
+            color: #4da6ff;
+            width: 180px;
+            text-align: center;
+            padding: 8px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.4s;
+            letter-spacing: 1px;
+        }
+
+        .input-coord:focus {
+            border-color: #3b82f6;
+        }
+
+        .hidden-content {
+            display: none;
+            animation: emerge 1.5s ease-out forwards;
+        }
+
+        @keyframes emerge {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .terminal-block {
+            border-right: 1px solid #1e40af;
+            padding-right: 1.5rem;
+        }
+
+        .flicker {
+            animation: flicker-text 4s infinite;
+        }
+
+        @keyframes flicker-text {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+            20%, 24%, 55% { opacity: 0.3; }
+        }
+
+        .archive-box {
+            background: rgba(1, 4, 15, 0.95);
+            border: 1px solid #1e40af;
+            color: #93c5fd;
+            padding: 25px;
+            font-size: 13px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: right;
+            direction: rtl;
+            line-height: 1.6;
+        }
+
+        .action-btn {
+            background: rgba(30, 64, 175, 0.1);
+            border: 1px solid #1e40af;
+            color: #4da6ff;
+            padding: 12px 24px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+            display: inline-block;
+            position: relative;
+            z-index: 50;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: #1e40af;
+            color: white;
+            box-shadow: 0 0 15px rgba(30, 64, 175, 0.8);
+        }
+
+        .next-phase-btn {
+            background: #1e3a8a;
+            border: 1px solid #3b82f6;
+            color: #fff;
+            padding: 15px 40px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 20px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .next-phase-btn:hover {
+            background: #3b82f6;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+        }
+        
+        .download-btn-morse {
+            border-color: #10b981;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="p-4 crt min-h-screen flex flex-col items-center justify-center">
+
+    <div class="w-full max-w-2xl flex justify-between text-[8px] opacity-30 mb-2 uppercase tracking-[0.5em]">
+        <span>REF_ID: 1994_TRANSIT</span>
+        <span id="signalStrength">dB: -INF</span>
+        <span id="clock">00:00:00</span>
+    </div>
+
+    <main class="w-full max-w-2xl bg-black border border-white/5 p-6 md:p-12 relative overflow-hidden">
+        
+        <div class="mb-12">
+            <h1 class="text-2xl font-bold tracking-[0.3em] text-blue-900/80 mb-1">INTERCEPT_STATION</h1>
+            <div class="h-0.5 w-12 bg-blue-900/50"></div>
+        </div>
+
+        <div id="waveform" class="waveform-container mb-12"></div>
+
+        <div id="mainInterface" class="flex flex-col items-center gap-10">
+            <button onclick="toggleAudio()" id="playBtn" class="text-[10px] border border-blue-900/50 px-8 py-3 hover:bg-blue-900/20 transition-all uppercase tracking-widest text-blue-400 font-bold">
+                <span id="btnText">Connect to Frequency</span>
+            </button>
+
+            <div class="text-center">
+                <p class="text-[8px] opacity-40 uppercase tracking-[0.2em] mb-3">Satellite Raw Data Export</p>
+                <a href="morse.wav" download="INTERCEPTED_SIGNAL_94.wav" class="action-btn download-btn-morse">
+                    Download Signal File (.wav)
+                </a>
+            </div>
+            
+            <div class="h-px w-full bg-blue-900/20 my-4"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full">
+                <div class="flex flex-col gap-2">
+                    <label class="text-[8px] opacity-20 uppercase tracking-[0.3em]">Latitude Input</label>
+                    <input type="text" id="lat" class="input-coord" placeholder="--.------" maxlength="9">
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-[8px] opacity-20 uppercase tracking-[0.3em]">Longitude Input</label>
+                    <input type="text" id="lng" class="input-coord" placeholder="--.------" maxlength="9">
+                </div>
+            </div>
+
+            <button onclick="calibrate()" class="text-[9px] text-blue-900 hover:text-blue-400 uppercase tracking-[0.8em] mt-2 transition-colors">
+                [ Execute Calibration ]
+            </button>
+        </div>
+
+        <div id="result" class="hidden-content mt-16 pt-10 border-t border-white/5">
+            <div class="terminal-block text-[12px] leading-relaxed text-blue-300/80 space-y-6" dir="rtl">
+                <p class="flicker font-bold">
+                    "התדר התייצב. הגישה לנתוני המעבר אושרה."
+                </p>
+
+                <p>
+                    מי שהשאיר את ההקלטה הזו ידע שאנחנו נחזור. הסיפור שלו נמצא כאן, מוחבא בתוך המערכת.
+                </p>
+
+                <div class="flex flex-col gap-4">
+                    <button onclick="showArchive()" class="action-btn">
+                        Open Decrypted Diary
+                    </button>
+                    
+                    <button onclick="nextPhase()" class="action-btn next-phase-btn">
+                        PROCEED TO PHASE 5.HTML
+                    </button>
+                </div>
+
+                <div id="archiveDisplay" class="archive-box"></div>
+            </div>
+
+            <div class="mt-16 flex justify-between items-center opacity-10 text-[7px] tracking-[0.4em]">
+                <div>LOG_FILE: SESSION_0971_B</div>
+                <div>ENCRYPT_KEY: NULL_VOID</div>
+            </div>
+        </div>
+
+        <div id="statusMsg" class="mt-6 text-[8px] text-center h-4 uppercase font-bold tracking-widest"></div>
+    </main>
+
+    <script>
+        let audioPlayer = new Audio('morse.wav');
+        audioPlayer.loop = true;
+        let isPlaying = false;
+        
+        const wave = document.getElementById('waveform');
+        const bars = [];
+        for (let i = 0; i < 50; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.setProperty('--h', (Math.random() * 60 + 10) + '%');
+            wave.appendChild(bar);
+            bars.push(bar);
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('en-GB');
+        }, 1000);
+
+        function animateBars() {
+            if (!isPlaying) return;
+            bars.forEach(b => {
+                const h = (Math.random() * 90 + 5);
+                b.style.height = h + '%';
+                b.style.background = h > 70 ? '#3b82f6' : '#1e3a8a';
+            });
+            setTimeout(animateBars, 80);
+        }
+
+        function toggleAudio() {
+            if (!isPlaying) {
+                audioPlayer.play().then(() => {
+                    isPlaying = true;
+                    startUI();
+                }).catch(() => {
+                    // Fallback if browser blocks autoplay
+                    isPlaying = true;
+                    startUI();
+                });
+            } else {
+                audioPlayer.pause();
+                isPlaying = false;
+                document.getElementById('waveform').classList.remove('active-scan');
+                document.getElementById('btnText').innerText = "Connect to Frequency";
+            }
+        }
+
+        function startUI() {
+            document.getElementById('waveform').classList.add('active-scan');
+            document.getElementById('btnText').innerText = "LINK ACTIVE";
+            animateBars();
+        }
+
+        function calibrate() {
+            const lat = document.getElementById('lat').value.trim();
+            const lng = document.getElementById('lng').value.trim();
+            const status = document.getElementById('statusMsg');
+            const result = document.getElementById('result');
+
+            // בדיקת קואורדינטות (השארתי את שני המצבים שכתבת כבדיקה אחת)
+            if ((lat === "32.072281" && lng === "34.774935") || (lat === "32.0722" && lng === "34.7749")) {
+                status.innerText = "COORDINATES ACCEPTED.";
+                status.style.color = "#3b82f6";
+                setTimeout(() => {
+                    result.style.display = "block";
+                    result.scrollIntoView({ behavior: 'smooth' });
+                    if (isPlaying) {
+                        audioPlayer.pause();
+                        isPlaying = false;
+                        document.getElementById('waveform').classList.remove('active-scan');
+                        document.getElementById('btnText').innerText = "Connect to Frequency";
+                    }
+                }, 800);
+            } else {
+                status.innerText = "ACCESS DENIED - INVALID COORDS.";
+                status.style.color = "#ff0000";
+                setTimeout(() => status.innerText = "", 3000);
+            }
+        }
+
+        function showArchive() {
+            const display = document.getElementById('archiveDisplay');
+            const content = `יומן מבצעי - רישום מחודש
+-----------------------
+הקולות בתדר המורס לא מפסיקים. זה מרגיש כאילו מישהו מנסה לשדר משהו מתוך העבר, משהו שנקבר ב-1994.
+
+החישובים פשוטים אבל כואבים. כדי להתקדם, תמיד היינו צריכים להסתכל על מה שמונח ממש מול העיניים שלנו. 
+השנה שבה הכל התחיל והמספר...
+
+אם הצלחתם להבין את המורס, הדרך קדימה פתוחה.`;
+            
+            display.innerText = content;
+            display.style.display = 'block';
+            display.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function nextPhase() {
+            window.location.href = "5.html";
+        }
+    </script>
+</body>
+</html>

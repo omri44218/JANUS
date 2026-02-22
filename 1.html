@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ארכיון מרכזית - מסווג</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;700&family=Courier+Prime&display=swap');
+        
+        body {
+            background-color: #050505;
+            color: #a0aec0;
+            font-family: 'Assistant', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .terminal {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .censor {
+            background-color: #1a202c;
+            color: #1a202c;
+            padding: 0 4px;
+            cursor: pointer;
+            transition: color 0.5s;
+        }
+
+        .censor:hover {
+            color: #4a5568;
+        }
+
+        .file-border {
+            border-left: 4px solid #2d3748;
+        }
+
+        .noise {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .download-btn {
+            border: 1px solid #1a202c;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            border-color: #4a5568;
+            background-color: #0a0a0a;
+            color: #e2e8f0;
+        }
+
+        .micro-upload-label {
+            cursor: pointer;
+            opacity: 0.22; 
+            width: 3px;
+            height: 3px;
+            background-color: #4a5568;
+            display: inline-block;
+            vertical-align: middle;
+            transition: all 0.5s;
+        }
+
+        .micro-upload-label:hover {
+            opacity: 1;
+            background-color: #4f46e5;
+            box-shadow: 0 0 10px #4f46e5;
+            width: 5px;
+            height: 5px;
+        }
+
+        .fade-in {
+            animation: fadeIn 1.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* עיצוב כפתור המעבר */
+        .next-level-btn {
+            display: inline-block;
+            border: 1px solid #16a34a;
+            color: #16a34a;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .next-level-btn:hover {
+            background: #16a34a;
+            color: #000;
+            box-shadow: 0 0 15px #16a34a;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-12 text-justify">
+    <div class="noise"></div>
+
+    <header class="max-w-4xl mx-auto mb-12 border-b border-gray-800 pb-6">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-100 terminal tracking-widest">ARCHIVE_SYSTEM_v4.2</h1>
+                <p class="text-red-900 font-bold text-xs mt-2 uppercase text-right">סיווג רמה 5 // כניסה ללא הרשאה אסורה</p>
+            </div>
+            <div class="text-left terminal text-xs text-gray-600">
+                DATE: 19.02.1994<br>
+                REF: JANUS-882
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto space-y-12">
+        
+        <section class="file-border pr-6">
+            <h2 class="text-xl font-bold text-gray-300 mb-4 underline text-right">דו"ח שטח: תצפית על ד"ר ארז</h2>
+            <p class="mb-4 text-right">
+                הנבדק נצפה לאחרונה בקרבת <span class="censor">מגדל שידור</span> נטוש. 
+                הוא השאיר אחריו רסיסי מידע מוצפנים. הניתוח הראשוני מעלה כי הוא מנסה להכווין אותנו למיקום פיזי דרך רשת האינטרנט המוקדמת.
+            </p>
+            <p class="mb-4 text-sm italic text-gray-500 text-right">
+            הוא נצפה מחזיק בתצלום המכיל רמז למיקומו הנוכחי.
+            </p>
+        </section>
+
+        <section class="pt-8 border-t border-gray-900 text-center">
+            <div class="py-6">
+                <p class="terminal text-[10px] text-gray-700 mb-2 uppercase tracking-widest">More information</p>
+                <button onclick="downloadSecretFile()" class="download-btn terminal text-[9px] text-gray-600 px-4 py-2 rounded uppercase">
+                  More information
+                </button>
+            </div>
+        </section>
+
+        <section class="text-center pt-2 pb-10">
+            <p class="terminal text-[8px] text-gray-950 mb-1 tracking-tighter italic">SYS_LISTENER_ON</p>
+            <label for="imageUpload" class="micro-upload-label" title="Neural Link Point">
+                <input type="file" id="imageUpload" class="hidden" accept="image/*" onchange="verifyImage(this)">
+            </label>
+            
+            <div id="statusMsg" class="mt-4 terminal text-[8px] h-4"></div>
+
+            <div id="nextStep" class="mt-8 p-6 border border-green-900/30 bg-green-950/10 text-right hidden">
+                <div class="mb-4 border-b border-green-900/30 pb-2">
+                    <h3 class="text-green-600 font-bold terminal text-xs uppercase">Integrity Verified // Signal Locked</h3>
+                </div>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                    החתימה תואמת את הרשומות. מצאת את "ארכיון הבקבוקים". 
+                    בין המדפים מסתתר משפט המפתח שיוביל אותך לספרייה העולמית.
+                </p>
+                <div class="bg-black/50 p-4 border-r-2 border-indigo-500 mb-6">
+                    <p class="text-[10px] text-indigo-300 terminal uppercase mb-1">Recovered Signal Phrase:</p>
+                    <p class="text-lg text-gray-200 font-bold tracking-widest terminal">ECHO_IN_THE_ARCHIVE_94</p>
+                </div>
+                
+                <a href="2.html" class="next-level-btn terminal">
+                Next step 
+                </a>
+
+                <p class="mt-6 text-[9px] text-gray-600 terminal italic">
+                    הצפנת נתונים הושלמה. לחץ על הקישור למעלה למעבר לשלב ג'.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-20 py-8 text-center text-gray-800 text-[10px] terminal-text">
+        <p>PROJECT JANUS // 1994</p>
+    </footer>
+
+    <script>
+        function downloadSecretFile() {
+            const base64Link = "aHR0cHM6Ly91bnNwbGFzaC5jb20vcGhvdG9zL2Jyb3duLXdvb2Rlbi1zaGVsZi13aXRoLWJvdHRsZXMtcHMtd2o3LWU2ZXc=";
+            const blob = new Blob([base64Link], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'More information.png'; // שיניתי ל-txt כי זה קישור
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function verifyImage(input) {
+            const msg = document.getElementById('statusMsg');
+            const nextStep = document.getElementById('nextStep');
+            
+            if (input.files && input.files[0]) {
+                const fileName = input.files[0].name.toLowerCase();
+                
+                msg.innerText = "READING HEADER...";
+                msg.className = "mt-4 terminal text-[8px] text-indigo-500 animate-pulse";
+                
+                setTimeout(() => {
+                    msg.innerText = "COMPARING HASH SIGNATURES...";
+                    
+                    setTimeout(() => {
+                        // בדיקת שם הקובץ (גמיש)
+                        const isCorrect = fileName.includes("thom") || 
+                                          fileName.includes("bradley") || 
+                                          fileName.includes("wj7") || 
+                                          fileName.includes("e6ew") ||
+                                          fileName.includes("unsplash");
+
+                        if (isCorrect) {
+                            msg.innerText = "SIGNATURE MATCHED. DECRYPTING DATA...";
+                            msg.className = "mt-4 terminal text-[8px] text-green-500 font-bold";
+                            
+                            setTimeout(() => {
+                                msg.innerText = "ACCESS GRANTED. REDIRECTING...";
+                                
+                                // הצגת החלק הבא וגלילה אליו
+                                nextStep.classList.remove('hidden');
+                                nextStep.classList.add('fade-in');
+                                
+                                // גלילה חלקה למטה כדי שהשחקן יראה את התוכן החדש
+                                setTimeout(() => {
+                                    nextStep.scrollIntoView({ behavior: 'smooth' });
+                                }, 100);
+
+                            }, 1000);
+                        } else {
+                            msg.innerText = "FATAL ERROR: INVALID SIGNAL SIGNATURE. FILE REJECTED.";
+                            msg.className = "mt-4 terminal text-[8px] text-red-700";
+                            input.value = ""; // מאפס את הבחירה
+                        }
+                    }, 1500);
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
