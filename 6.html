@@ -215,10 +215,15 @@
             timerElem.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             if (timeLeft <= 0) {
                 clearInterval(countdown);
+                zz():
                 document.body.innerHTML = "<div style='color:red; text-align:center; padding-top:20%; font-family:monospace;'><h1>CRITICAL FAILURE: TIME EXPIRED</h1><p>JANUS HAS ASSIMILATED YOUR CONNECTION.</p></div>";
             }
         }, 1000);
-
+function zz() {
+    clearInterval(countdown);
+    // זה מחליף את העמוד הנוכחי בהיסטוריה של הדפדפן
+window.location.replace("index.html");
+}
         function addLog(msg) {
             const log = document.getElementById('log');
             log.innerHTML += `> ${msg}<br>`;
@@ -294,4 +299,5 @@
         }
     </script>
 </body>
+
 </html>
